@@ -46,7 +46,9 @@ const getSkillLevel = (skill: Skill) => {
       stealthBonus
     )
   }
-  return Math.floor(charStore.currentChar!.level / 2) - armorSubtraction + stealthBonus
+  return (
+    Math.floor(charStore.currentChar!.level / 2) - armorSubtraction + stealthBonus + +skill.other
+  )
 }
 const openSkillMenu = (skill: Skill) => {
   activeSkill.value = skill

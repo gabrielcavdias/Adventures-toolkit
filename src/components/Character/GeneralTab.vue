@@ -89,7 +89,7 @@ const deleteAbility = () => {
 
 <template>
   <template v-if="charStore.currentChar">
-    <details class="group max-h-10 open:max-h-[300px] overflow-hidden transition-all duration-300">
+    <details class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300">
       <summary>
         <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
           Atributos
@@ -144,7 +144,7 @@ const deleteAbility = () => {
       </ul>
     </details>
     <details
-      class="group max-h-10 open:max-h-[300px] overflow-hidden transition-all duration-300 pb-1"
+      class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300 pb-1"
     >
       <summary>
         <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
@@ -170,7 +170,7 @@ const deleteAbility = () => {
       </ul>
     </details>
     <details
-      class="group max-h-10 open:max-h-[300px] overflow-hidden transition-all duration-300 pb-1"
+      class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300 pb-1"
     >
       <summary>
         <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
@@ -208,7 +208,7 @@ const deleteAbility = () => {
       </div>
     </details>
     <details
-      class="group max-h-10 open:max-h-[300px] overflow-hidden transition-all duration-300 pb-1"
+      class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300 pb-1"
     >
       <summary>
         <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
