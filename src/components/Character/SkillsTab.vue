@@ -32,7 +32,7 @@ const getSkillLevel = (skill: Skill) => {
       : 0
   const armorSubtraction = skill.affected_by_armor
     ? (charStore.currentChar?.armor_and_shields.reduce(
-        (acc: number, cur: ArmorOrShield) => acc + cur.penality,
+        (acc: number, cur: ArmorOrShield) => acc + +cur.penality,
         0,
       ) ?? 0)
     : 0
