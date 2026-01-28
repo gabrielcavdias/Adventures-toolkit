@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import type { ArmorOrShield, Attribute, Skill } from '../../helpers/types'
 import AppButton from '../AppButton.vue'
 import { useCharacterStore } from '../../stores/character-store'
@@ -20,6 +20,11 @@ const newSkill = reactive<Skill>({
   affected_by_armor: false,
   attribute: 'strength',
   trained_only: false,
+})
+
+const sortedSkills = computed(() => {
+  const skills = [...(charStore.currentChar?.skills ?? [])]
+  return skills.sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const getSkillLevel = (skill: Skill) => {
@@ -47,7 +52,11 @@ const getSkillLevel = (skill: Skill) => {
     )
   }
   return (
-    Math.floor(charStore.currentChar!.level / 2) - armorSubtraction + stealthBonus + +skill.other
+    Math.floor(charStore.currentChar!.level / 2) -
+    armorSubtraction +
+    stealthBonus +
+    +skill.other +
+    modifiers[skill.attribute]
   )
 }
 const openSkillMenu = (skill: Skill) => {
@@ -86,7 +95,7 @@ const deleteActiveSkill = () => {
   </div>
   <ul class="mt-4 mx-2 grid gap-2 text-gray-100">
     <li
-      v-for="(skill, index) in charStore.currentChar?.skills"
+      v-for="(skill, index) in sortedSkills"
       :key="skill.name"
       class="bg-neutral-600 p-2 rounded-lg flex items-center gap-2"
       @click.stop="openSkillMenu(skill)"

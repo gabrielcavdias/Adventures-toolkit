@@ -10,6 +10,10 @@ import SkillsTab from '../components/Character/SkillsTab.vue'
 import CharacterHeader from '../components/Character/CharacterHeader.vue'
 import CombatTab from '../components/Character/CombatTab.vue'
 import AttributesSection from '../components/Character/GeneralTab.vue'
+import ManaPotion from '../components/Icons/ManaPotion.vue'
+import AppInput from '../components/AppInput.vue'
+import AppButton from '../components/AppButton.vue'
+import AppModal from '../components/AppModal.vue'
 
 type Tab = 'general' | 'skills' | 'spells' | 'combat'
 const parsedData = ref<Spell[]>()
@@ -35,6 +39,31 @@ const modifiers = computed(() => ({
   intelligence: Math.floor(((charStore.currentChar?.attributes.intelligence ?? 10) - 10) / 2),
   charisma: Math.floor(((charStore.currentChar?.attributes.charisma ?? 10) - 10) / 2),
 }))
+
+const manaModal = ref<InstanceType<typeof AppModal> | null>(null)
+
+const manaPointsCalc = ref(0)
+const changeMagicPoints = (action: 'add' | 'subtract') => {
+  if (action == 'subtract') {
+    substractMana(manaPointsCalc.value)
+  } else {
+    addMana(manaPointsCalc.value)
+  }
+  manaPointsCalc.value = 0
+  manaModal.value?.closeModal()
+}
+
+const substractMana = (qtd: number) => {
+  if (!charStore.currentChar) return
+  charStore.currentChar.current_mp = Math.max(0, charStore.currentChar.current_mp - qtd)
+}
+const addMana = (qtd: number) => {
+  if (!charStore.currentChar) return
+  charStore.currentChar.current_mp = Math.min(
+    charStore.currentChar.current_mp + qtd,
+    charStore.currentChar.magic_ponts,
+  )
+}
 
 const deleteSpell = (spell: Spell) => {
   if (!charStore.currentChar) return
@@ -87,6 +116,30 @@ onMounted(() => {
     <SkillsTab :modifiers="modifiers" />
   </template>
   <template v-if="currentTab == 'spells'">
+    <div
+      class="relative outline text-center rounded-xl text-gray-100 font-bold text-shadow-purple text-shadow-purple-400 max-w-[200px] py-4 mt-4 mx-auto text-2xl"
+      @click="manaModal?.openModal()"
+    >
+      <span
+        class="absolute inset-0 flex items-center justify-center z-10"
+        v-if="charStore.currentChar"
+      >
+        <button @click.stop="substractMana(1)">
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <span
+          :class="{
+            'text-red-500 font-bold': charStore.currentChar.current_mp < 0,
+          }"
+          >{{ charStore.currentChar.current_mp }}</span
+        >
+        / {{ charStore.currentChar?.magic_ponts }}
+        <button @click.stop="addMana(1)">
+          <i class="fa-solid fa-chevron-up"></i>
+        </button>
+      </span>
+      <ManaPotion width="100" class="text-purple-600 mx-auto" />
+    </div>
     <SpellsList
       v-model="search"
       :data="parsedData"
@@ -102,6 +155,21 @@ onMounted(() => {
         v-if="activeSpell !== undefined"
       />
     </Transition>
+    <AppModal ref="manaModal" v-if="charStore.currentChar">
+      <label for="life_points" class="mt-2 text-lg font-semibold mb-1 block"
+        >Pontos mana totais</label
+      >
+      <AppInput type="number" id="life_points" v-model="charStore.currentChar.magic_ponts" />
+
+      <div class="mt-4 outline p-2">
+        <label for="calc" class="mt-2 text-lg font-semibold mb-1 block">Alterar mana</label>
+        <AppInput type="number" id="calc" />
+        <div class="mt-4 flex gap-2 items-center">
+          <AppButton @click="changeMagicPoints('add')"> Adicionar </AppButton>
+          <AppButton class="bg-red-500" @click="changeMagicPoints('subtract')"> Remover </AppButton>
+        </div>
+      </div>
+    </AppModal>
   </template>
   <template v-if="currentTab === 'combat'">
     <CombatTab :modifiers="modifiers" />

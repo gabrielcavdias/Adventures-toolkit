@@ -35,11 +35,47 @@ const itemToDelete = ref<{
   index: number
   type: 'feat' | 'note'
 }>()
+const fieldToEdit = ref<{
+  title: string
+  index: number
+  type: 'feat' | 'note'
+}>()
+const abilityEditing = ref<Expandable>({
+  title: '',
+  body: '',
+})
 const startTime = ref<number>(new Date().getTime())
 const deleteItemModal = ref<InstanceType<typeof AppModal> | null>(null)
 const featItemModal = ref<InstanceType<typeof AppModal> | null>(null)
 const noteItemModal = ref<InstanceType<typeof AppModal> | null>(null)
 const newWeaponModal = ref<InstanceType<typeof AppModal> | null>(null)
+const editAbilityModal = ref<InstanceType<typeof AppModal> | null>(null)
+
+const editAbility = () => {
+  const index = fieldToEdit.value!.index
+  const list =
+    fieldToEdit.value?.type == 'feat' ? charStore.currentChar?.feats : charStore.currentChar?.notes
+  if (!list) return
+  list[index] = abilityEditing.value
+  abilityEditing.value = { title: '', body: '' }
+  editAbilityModal.value?.closeModal()
+}
+
+const openEditAbilityModal = (type: 'feat' | 'note', index: number) => {
+  if (!charStore.currentChar) return
+  const targetList = type == 'note' ? charStore.currentChar.notes : charStore.currentChar.feats
+
+  fieldToEdit.value = {
+    title: targetList[index]?.title ?? '',
+    index,
+    type,
+  }
+  abilityEditing.value = {
+    title: targetList[index]!.title,
+    body: targetList[index]!.body,
+  }
+  editAbilityModal.value?.openModal()
+}
 
 const countSeconds = () => {
   startTime.value = new Date().getTime()
@@ -152,23 +188,28 @@ const deleteWeapon = (weapon: Weapon) => {
       <AppButton @click="featItemModal?.openModal()">Adicionar novo</AppButton>
       <ul class="mt-4 text-gray-100 w-full grid gap-2">
         <li
-          v-for="(ability, index) in charStore.currentChar.feats"
-          :key="ability.title"
+          v-for="(feat, index) in charStore.currentChar.feats"
+          :key="feat.title"
           @touchstart="countSeconds"
           @touchend="openDeleteItem('feat', index)"
         >
           <details>
             <summary class="bg-purple-600 py-2 px-4 outline rounded-md flex justify-between">
-              {{ ability.title }}
-              <button
-                class="text-red-400 hidden lg:inline"
-                @click="charStore.currentChar.feats.splice(index, 1)"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </button>
+              {{ feat.title }}
+              <div class="flex gap-1">
+                <button
+                  class="text-red-400 hidden lg:inline"
+                  @click="charStore.currentChar.feats.splice(index, 1)"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+                <button @click="openEditAbilityModal('feat', index)">
+                  <i class="fa-solid fa-pencil"></i>
+                </button>
+              </div>
             </summary>
             <p class="bg-neutral-800 p-3">
-              {{ ability.body }}
+              {{ feat.body }}
             </p>
           </details>
         </li>
@@ -425,12 +466,17 @@ const deleteWeapon = (weapon: Weapon) => {
           <details>
             <summary class="bg-purple-600 py-2 px-4 outline rounded-md flex justify-between">
               {{ note.title }}
-              <button
-                class="text-red-400 hidden lg:inline"
-                @click="charStore.currentChar.notes.splice(index, 1)"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </button>
+              <div class="flex gap-2">
+                <button @click="openEditAbilityModal('feat', index)">
+                  <i class="fa-solid fa-pencil"></i>
+                </button>
+                <button
+                  class="text-red-400 hidden lg:inline"
+                  @click="charStore.currentChar.notes.splice(index, 1)"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
             </summary>
             <p class="bg-neutral-800 p-3">
               {{ note.body }}
@@ -498,6 +544,24 @@ const deleteWeapon = (weapon: Weapon) => {
     </span>
     <div class="flex mt-2 justify-end">
       <AppButton @click="createNewWeapon">Criar</AppButton>
+    </div>
+  </AppModal>
+  <AppModal ref="editAbilityModal">
+    <h2 class="text-center text-gray-100 font-bold my-4 text-2xl">Editar habilidade</h2>
+    <label for="race_ability_title" class="text-lg font-semibold mb-1 block">
+      Título da habilidade
+    </label>
+    <AppInput type="text" id="race_ability_title" v-model="abilityEditing.title" />
+    <label for="race_ability_body" class="mt-2 text-lg font-semibold mb-1 block">
+      Descrição da habilidade <span class="text-gray-400">(Opcional)</span>
+    </label>
+    <textarea
+      id="race_ability_body"
+      class="w-full rounded p-2 outline outline-gray-100 focus:outline-purple-500 text-gray-100"
+      v-model="abilityEditing.body"
+    ></textarea>
+    <div class="flex justify-end mt-2">
+      <AppButton @click="editAbility()">Editar Habilidade</AppButton>
     </div>
   </AppModal>
 </template>

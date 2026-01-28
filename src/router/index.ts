@@ -19,6 +19,11 @@ const router = createRouter({
       name: 'chars-single',
       component: () => import('../views/CharacterSingleView.vue'),
     },
+    {
+      path: '/barra-de-vida',
+      name: 'lifebars',
+      component: () => import('../views/LifeBarsView.vue'),
+    },
   ],
 })
 

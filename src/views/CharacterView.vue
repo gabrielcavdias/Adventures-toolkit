@@ -235,6 +235,7 @@ const deleteChar = (slug: string | undefined) => {
 async function addJsonCharacter(file: File) {
   const char = await handleJsonfile(file)
   charStore.characters.push(char as Character)
+  importCharModal.value?.closeModal()
 }
 
 async function handleJsonfile(file: File) {
@@ -296,6 +297,7 @@ async function handleJsonfile(file: File) {
       </span>
     </li>
   </ul>
+
   <AppModal ref="addCharModal">
     <label for="name" class="font-bold">Nome</label>
     <AppInput type="text" name="name" id="name" v-model="newChar.name" />
@@ -314,7 +316,6 @@ async function handleJsonfile(file: File) {
       {{ file ? `Importado` : 'Enviar arquivo' }}
       <i class="fa-solid fa-file-import"></i>
     </label>
-    {{ file }}
     <AppInput
       type="file"
       name="file"

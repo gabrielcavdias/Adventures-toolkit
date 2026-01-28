@@ -6,11 +6,13 @@ import AppModal from '../AppModal.vue'
 import AttributeBlock from '../AttributeBlock.vue'
 import AppInput from '../AppInput.vue'
 import AppButton from '../AppButton.vue'
+
 const { modifiers } = defineProps<{ modifiers: Record<Attribute, number> }>()
 const savesModal = ref<InstanceType<typeof AppModal> | null>(null)
 const classAbilitiesModal = ref<InstanceType<typeof AppModal> | null>(null)
 const raceAbilitiesModal = ref<InstanceType<typeof AppModal> | null>(null)
 const deleteAbilityModal = ref<InstanceType<typeof AppModal> | null>(null)
+const editAbilityModal = ref<InstanceType<typeof AppModal> | null>(null)
 
 const charStore = useCharacterStore()
 const newClassAbility = ref<Expandable>({
@@ -21,7 +23,16 @@ const newRaceAbility = ref<Expandable>({
   title: '',
   body: '',
 })
+const abilityEditing = ref<Expandable>({
+  title: '',
+  body: '',
+})
 const abilityToDelete = ref<{
+  title: string
+  index: number
+  type: 'race' | 'class'
+}>()
+const abilityToEdit = ref<{
   title: string
   index: number
   type: 'race' | 'class'
@@ -54,6 +65,13 @@ const addAbility = (type: 'race' | 'class') => {
   newClassAbility.value.body = ''
   classAbilitiesModal.value?.closeModal()
 }
+const editAbility = () => {
+  const index = abilityToEdit.value!.index
+  charStore.currentChar!.class_abilities[index] = abilityEditing.value
+
+  abilityEditing.value = { title: '', body: '' }
+  editAbilityModal.value?.closeModal()
+}
 const countSeconds = () => {
   startTime.value = new Date().getTime()
 }
@@ -72,6 +90,22 @@ const openDeleteAbilityModal = (type: 'race' | 'class', index: number) => {
     type,
   }
   deleteAbilityModal.value?.openModal()
+}
+
+const openEditAbilityModal = (type: 'race' | 'class', index: number) => {
+  if (!charStore.currentChar) return
+  const targetList =
+    type == 'race' ? charStore.currentChar.race_abilitites : charStore.currentChar.class_abilities
+  abilityToEdit.value = {
+    title: targetList[index]?.title ?? '',
+    index,
+    type,
+  }
+  abilityEditing.value = {
+    title: targetList[index]!.title,
+    body: targetList[index]!.body,
+  }
+  editAbilityModal.value?.openModal()
 }
 
 const deleteAbility = () => {
@@ -192,11 +226,8 @@ const deleteAbility = () => {
             <details>
               <summary class="bg-purple-600 py-2 px-4 outline rounded-md flex justify-between">
                 {{ ability.title }}
-                <button
-                  class="text-red-400 hidden lg:inline"
-                  @click="charStore.currentChar.class_abilities.splice(index, 1)"
-                >
-                  <i class="fa-solid fa-trash"></i>
+                <button @click="openEditAbilityModal('class', index)">
+                  <i class="fa-solid fa-pencil"></i>
                 </button>
               </summary>
               <p class="bg-neutral-800 p-3">
@@ -353,6 +384,24 @@ const deleteAbility = () => {
       </p>
       <div class="mt-2">
         <AppButton class="bg-red-500" @click="deleteAbility">Excluir habilidade</AppButton>
+      </div>
+    </AppModal>
+    <AppModal ref="editAbilityModal">
+      <h2 class="text-center text-gray-100 font-bold my-4 text-2xl">Editar habilidade</h2>
+      <label for="race_ability_title" class="text-lg font-semibold mb-1 block">
+        Título da habilidade
+      </label>
+      <AppInput type="text" id="race_ability_title" v-model="abilityEditing.title" />
+      <label for="race_ability_body" class="mt-2 text-lg font-semibold mb-1 block">
+        Descrição da habilidade <span class="text-gray-400">(Opcional)</span>
+      </label>
+      <textarea
+        id="race_ability_body"
+        class="w-full rounded p-2 outline outline-gray-100 focus:outline-purple-500 text-gray-100"
+        v-model="abilityEditing.body"
+      ></textarea>
+      <div class="flex justify-end mt-2">
+        <AppButton @click="editAbility()">Editar Habilidade</AppButton>
       </div>
     </AppModal>
   </template>
