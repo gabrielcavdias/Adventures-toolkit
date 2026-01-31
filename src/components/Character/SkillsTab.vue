@@ -28,6 +28,12 @@ const sortedSkills = computed(() => {
 })
 
 const getSkillLevel = (skill: Skill) => {
+  const overEncumbranceSubtraction =
+    ['Acrobacia', 'Atletismo', 'Furtividade', 'Ladinagem'].includes(skill.name) &&
+    charStore.isCurCharOverEncumbered
+      ? 2
+      : 0
+
   if (skill.trained_only && !skill.trained) {
     return 'NT'
   }
@@ -48,7 +54,8 @@ const getSkillLevel = (skill: Skill) => {
       charStore.currentChar!.level +
       +skill.other -
       armorSubtraction +
-      stealthBonus
+      stealthBonus -
+      overEncumbranceSubtraction
     )
   }
   return (
@@ -56,7 +63,8 @@ const getSkillLevel = (skill: Skill) => {
     armorSubtraction +
     stealthBonus +
     +skill.other +
-    modifiers[skill.attribute]
+    modifiers[skill.attribute] -
+    overEncumbranceSubtraction
   )
 }
 const openSkillMenu = (skill: Skill) => {

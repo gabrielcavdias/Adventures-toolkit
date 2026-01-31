@@ -68,7 +68,7 @@ export type ArmorOrShield = {
   type: 'shield' | 'armor'
 }
 
-type Equipment = {
+export type Equipment = {
   name: string
   weight: number
   quantity: number

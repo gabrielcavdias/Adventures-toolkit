@@ -14,8 +14,9 @@ import ManaPotion from '../components/Icons/ManaPotion.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AppModal from '../components/AppModal.vue'
+import EquipmentTab from '../components/Character/EquipmentTab.vue'
 
-type Tab = 'general' | 'skills' | 'spells' | 'combat'
+type Tab = 'general' | 'skills' | 'spells' | 'combat' | 'equips'
 const parsedData = ref<Spell[]>()
 
 const route = useRoute()
@@ -28,7 +29,8 @@ const tabs: [string, Tab][] = [
   ['Geral', 'general'],
   ['Perícias', 'skills'],
   ['Magias', 'spells'],
-  ['Talentos e combate', 'combat'],
+  ['Combate', 'combat'],
+  ['Inventário', 'equips'],
 ]
 
 const modifiers = computed(() => ({
@@ -173,6 +175,9 @@ onMounted(() => {
   </template>
   <template v-if="currentTab === 'combat'">
     <CombatTab :modifiers="modifiers" />
+  </template>
+  <template v-if="currentTab == 'equips'">
+    <EquipmentTab />
   </template>
 </template>
 <style scoped>
