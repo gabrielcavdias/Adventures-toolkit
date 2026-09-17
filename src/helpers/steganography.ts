@@ -18,7 +18,7 @@ export async function encode(dataUrl: string, message: string): Promise<string> 
   let rgbIndex = 0
   for (let i = 0; i < newPixelBytes.length; i++) {
     if (!isRGBChannel(0, i)) continue // leave alpha untouched: flipping it can round the RGB bytes on readback
-    newPixelBytes[i] = newRGBValues[rgbIndex]
+    newPixelBytes[i] = newRGBValues[rgbIndex] as number
     rgbIndex++
   }
 
