@@ -6,6 +6,7 @@ import AppButton from '../components/AppButton.vue'
 import AppInput from '../components/AppInput.vue'
 import type { Character } from '../helpers/types'
 import { convertToSlug } from '../helpers/functions'
+import { decode } from '../helpers/steganography'
 
 const charStore = useCharacterStore()
 const addCharModal = ref<InstanceType<typeof AppModal> | null>(null)
@@ -232,31 +233,48 @@ const deleteChar = (slug: string | undefined) => {
   charStore.characters = charStore.characters.filter((char) => char.slug !== slug)
 }
 
-async function addJsonCharacter(file: File) {
-  const char = await handleJsonfile(file)
-  charStore.characters.push(char as Character)
-  importCharModal.value?.closeModal()
+async function addCharacterFile(file: File) {
+  try {
+    const char =
+      file.type === 'application/json' ? await handleJsonfile(file) : await handleImageFile(file)
+    charStore.characters.push(char as Character)
+    importCharModal.value?.closeModal()
+  } catch (e) {
+    console.error(e)
+    alert('Não foi possível importar o personagem')
+  }
 }
 
 async function handleJsonfile(file: File) {
-  return await new Promise((resolve, reject) => {
+  const text = await readFileAsText(file)
+  return JSON.parse(text)
+}
+
+async function handleImageFile(file: File) {
+  const dataUrl = await readFileAsDataUrl(file)
+  const decoded = await decode(dataUrl)
+  console.log('decoded')
+  console.log(decoded)
+  const char = JSON.parse(decodeURIComponent(decoded))
+  char.image = dataUrl
+  return char
+}
+
+async function readFileAsText(file: File) {
+  return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
-
-    reader.onload = function (e) {
-      try {
-        const jsonData = JSON.parse(e.target?.result as string)
-        resolve(jsonData)
-      } catch (e) {
-        console.error(e)
-        reject(new Error('Invalid JSON file'))
-      }
-    }
-
-    reader.onerror = function () {
-      reject(new Error('Error reading file'))
-    }
-
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('Error reading file'))
     reader.readAsText(file)
+  })
+}
+
+async function readFileAsDataUrl(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('Error reading file'))
+    reader.readAsDataURL(file)
   })
 }
 </script>
@@ -282,12 +300,17 @@ async function handleJsonfile(file: File) {
             slug: char.slug,
           },
         }"
-        class="w-full"
+        class="w-full flex items-center gap-3"
       >
-        {{ char.name }}
-        <span class="block">
-          <i class="fa-solid fa-book-open"></i>
-          {{ char.spell_ids.length }}
+        <div class="size-12 shrink-0 rounded-full overflow-hidden bg-neutral-700">
+          <img v-if="char.image" :src="char.image" class="size-full object-cover" />
+        </div>
+        <span>
+          {{ char.name }}
+          <span class="block">
+            <i class="fa-solid fa-book-open"></i>
+            {{ char.spell_ids.length }}
+          </span>
         </span>
       </RouterLink>
       <span>
@@ -322,7 +345,7 @@ async function handleJsonfile(file: File) {
       id="file"
       v-model="file"
       class="hidden"
-      @change="async (e: any) => await addJsonCharacter(e.target.files[0])"
+      @change="async (e: any) => await addCharacterFile(e.target.files[0])"
     />
     <span v-if="importCharMessage.length" class="text-red-300">
       {{ importCharMessage }}

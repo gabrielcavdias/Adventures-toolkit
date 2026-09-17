@@ -98,6 +98,7 @@ export type Expandable = {
 export type Character = {
   name: string
   slug: string
+  image?: string
   race: string
   class: string
   level: number

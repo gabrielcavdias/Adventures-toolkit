@@ -10,6 +10,7 @@ import AppInput from '../AppInput.vue'
 import AppButton from '../AppButton.vue'
 import { convertToSlug, getSizeModifier } from '../../helpers/functions'
 import { SIZE_OPTIONS } from '../../helpers/constants'
+import { encode } from '../../helpers/steganography'
 
 const charStore = useCharacterStore()
 const { modifiers } = defineProps<{ modifiers: Record<Attribute, number> }>()
@@ -17,6 +18,7 @@ const { modifiers } = defineProps<{ modifiers: Record<Attribute, number> }>()
 const lifePointsCalc = ref(0)
 const lifeModal = ref<InstanceType<typeof AppModal> | null>(null)
 const acModal = ref<InstanceType<typeof AppModal> | null>(null)
+const exportModal = ref<InstanceType<typeof AppModal> | null>(null)
 const changeLifePoints = (action: 'add' | 'subtract') => {
   if (action == 'subtract') {
     subtractLife(lifePointsCalc.value)
@@ -66,7 +68,17 @@ const addLife = (qtd: number) => {
   )
 }
 
-const exportCharacter = () => {
+const uploadImage = (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file || !charStore.currentChar) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    charStore.currentChar!.image = reader.result as string
+  }
+  reader.readAsDataURL(file)
+}
+
+const exportAsJson = () => {
   if (!charStore.currentChar) return
   const data = JSON.stringify(charStore.currentChar, null, 2)
   const blob = new Blob([data], { type: 'application/json' })
@@ -76,9 +88,26 @@ const exportCharacter = () => {
   anchor.download = convertToSlug(charStore.currentChar.name) + '.json'
   anchor.click()
   URL.revokeObjectURL(url)
+  exportModal.value?.closeModal()
+}
+
+const exportAsImage = async () => {
+  if (!charStore.currentChar?.image) return
+  const { image, ...charWithoutImage } = charStore.currentChar
+  const encodedJson = encodeURIComponent(JSON.stringify(charWithoutImage))
+  const encodedImage = await encode(image, encodedJson)
+  const anchor = document.createElement('a')
+  anchor.href = encodedImage
+  anchor.download = convertToSlug(charStore.currentChar.name) + '.png'
+  anchor.click()
+  exportModal.value?.closeModal()
 }
 </script>
 <template>
+  <label class="block size-24 mt-6 mx-auto rounded-full overflow-hidden bg-neutral-700 cursor-pointer">
+    <img v-if="charStore.currentChar?.image" :src="charStore.currentChar.image" class="size-full object-cover" />
+    <input type="file" accept="image/*" class="hidden" @change="uploadImage" />
+  </label>
   <h2 class="text-gray-100 text-3xl mt-6 mx-2 text-center">{{ charStore.currentChar?.name }}</h2>
 
   <details
@@ -138,7 +167,7 @@ const exportCharacter = () => {
         </li>
       </ul>
       <div class="flex justify-center my-4">
-        <AppButton class="inline-flex items-center gap-2" @click="exportCharacter">
+        <AppButton class="inline-flex items-center gap-2" @click="exportModal?.openModal()">
           Exportar <i class="fa-solid fa-file-export"></i>
         </AppButton>
       </div>
@@ -226,6 +255,20 @@ const exportCharacter = () => {
     </ul>
     <label for="ac_other" class="mt-2 text-lg font-semibold mb-1 block">Outros modificadores</label>
     <AppInput type="number" id="ac_other" v-model="charStore.currentChar.ac_other" />
+  </AppModal>
+  <AppModal ref="exportModal">
+    <div class="flex flex-col gap-2">
+      <AppButton class="inline-flex items-center justify-center gap-2" @click="exportAsJson">
+        Exportar como JSON <i class="fa-solid fa-file-export"></i>
+      </AppButton>
+      <AppButton
+        v-if="charStore.currentChar?.image"
+        class="inline-flex items-center justify-center gap-2"
+        @click="exportAsImage"
+      >
+        Exportar como imagem <i class="fa-solid fa-file-image"></i>
+      </AppButton>
+    </div>
   </AppModal>
 </template>
 <style>
