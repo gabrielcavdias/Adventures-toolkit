@@ -9,6 +9,7 @@ export type Spell = {
   target?: string
   duration?: string
   description?: string
+  save?: string
 }
 export type Attribute =
   | 'strength'

@@ -6,7 +6,16 @@ import AppModal from '../AppModal.vue'
 import AttributeBlock from '../AttributeBlock.vue'
 import AppInput from '../AppInput.vue'
 import AppButton from '../AppButton.vue'
+import { createReusableTemplate, useMediaQuery } from '@vueuse/core'
 
+const isLargeScreen = useMediaQuery('(min-width: 1024px)')
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
+
+const preventToggleOnLargeScreen = (e: Event) => {
+  if (isLargeScreen.value && (e.target as HTMLElement).closest('details') === e.currentTarget) {
+    e.preventDefault()
+  }
+}
 const { modifiers } = defineProps<{ modifiers: Record<Attribute, number> }>()
 const savesModal = ref<InstanceType<typeof AppModal> | null>(null)
 const classAbilitiesModal = ref<InstanceType<typeof AppModal> | null>(null)
@@ -122,17 +131,103 @@ const deleteAbility = () => {
 </script>
 
 <template>
-  <template v-if="charStore.currentChar">
-    <details class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300">
+  <div
+    v-if="charStore.currentChar"
+    class="lg:grid lg:grid-cols-2 lg:px-8 align-start grid-flow-dense items-start"
+  >
+    <!-- Savings template -->
+    <DefineTemplate>
+      <p
+        class="text-xl bg-purple-600 px-3 text-white flex justify-between items-center rounded-t-xl border-white border-t border-x"
+      >
+        Fortitude
+        <span class="inline-block px-4 py-2 font-bold">{{ savings.fortitude }}</span>
+      </p>
+      <ul class="flex">
+        <li class="outline w-full p-2">
+          <span class="block font-bold">1/2 do nível</span>
+          {{ halfLevel }}
+        </li>
+        <li class="outline w-full p-2">
+          <span class="block font-bold">Mod. Const</span>
+          {{ modifiers.constitution }}
+        </li>
+        <li class="outline w-full p-2">
+          <label for="fortitude_other" class="block font-bold">Outros</label>
+          <AppInput
+            type="number"
+            id="fortitude_other"
+            v-model="charStore.currentChar.saving.fortitude_other"
+          />
+        </li>
+      </ul>
+      <!--  -->
+      <p
+        class="mt-3 text-xl bg-purple-600 px-3 text-white flex justify-between items-center rounded-t-xl border-white border-t border-x"
+      >
+        Reflexo
+        <span class="inline-block px-4 py-2 font-bold">{{ savings.reflex }}</span>
+      </p>
+      <ul class="flex">
+        <li class="outline w-full p-2">
+          <span class="block font-bold">1/2 do nível</span>
+          {{ halfLevel }}
+        </li>
+        <li class="outline w-full p-2">
+          <span class="block font-bold">Mod. Dest</span>
+          {{ modifiers.dexterity }}
+        </li>
+        <li class="outline w-full p-2">
+          <label for="reflex_other" class="block font-bold">Outros</label>
+          <AppInput
+            type="number"
+            id="reflex_other"
+            v-model="charStore.currentChar.saving.reflex_other"
+          />
+        </li>
+      </ul>
+      <!--  -->
+      <p
+        class="mt-3 text-xl bg-purple-600 px-3 text-white flex justify-between items-center rounded-t-xl border-white border-t border-x"
+      >
+        Vontade
+        <span class="inline-block px-4 py-2 font-bold">{{ savings.will }}</span>
+      </p>
+      <ul class="flex">
+        <li class="outline w-full p-2">
+          <span class="block font-bold">1/2 do nível</span>
+          {{ halfLevel }}
+        </li>
+        <li class="outline w-full p-2">
+          <span class="block font-bold">Mod. Sab</span>
+          {{ modifiers.wisdom }}
+        </li>
+        <li class="outline w-full p-2">
+          <label for="will_other" class="block font-bold">Outros</label>
+          <AppInput
+            type="number"
+            id="will_other"
+            v-model="charStore.currentChar.saving.will_other"
+          />
+        </li>
+      </ul>
+    </DefineTemplate>
+    <!--  -->
+
+    <details
+      :open="isLargeScreen"
+      @click="preventToggleOnLargeScreen"
+      class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300"
+    >
       <summary>
-        <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
+        <h2 class="text-center lg:text-left text-gray-100 my-4 text-xl font-bold">
           Atributos
           <i
-            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300"
+            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300 lg:opacity-0"
           ></i>
         </h2>
       </summary>
-      <ul class="mt-4 text-gray-100 grid grid-cols-3 gap-2 mx-2 pb-2">
+      <ul class="mt-4 text-gray-100 grid grid-cols-3 lg:grid-cols-2 gap-2 mx-2 pb-2">
         <AttributeBlock
           label="Força"
           attribute="strength"
@@ -178,17 +273,26 @@ const deleteAbility = () => {
       </ul>
     </details>
     <details
+      :open="isLargeScreen"
+      @click="preventToggleOnLargeScreen"
       class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300 pb-1"
     >
       <summary>
-        <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
+        <h2 class="text-center lg:text-left text-gray-100 my-4 text-xl font-bold">
           Resistências
           <i
-            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300"
+            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300 lg:opacity-0"
           ></i>
         </h2>
       </summary>
-      <ul class="mt-4 text-gray-100 flex mx-2 gap-2 pb-2" @click="savesModal?.openModal()">
+      <div v-if="isLargeScreen" class="text-white px-4">
+        <ReuseTemplate />
+      </div>
+      <ul
+        class="mt-4 text-gray-100 flex mx-2 gap-2 pb-2"
+        @click="savesModal?.openModal()"
+        v-if="!isLargeScreen"
+      >
         <li class="text-center outline-gray-100 outline rounded-md overflow-hidden w-full pb-1">
           <span class="block w-full bg-purple-600 mb-1">Fortitude</span>
           {{ savings.fortitude }}
@@ -204,13 +308,15 @@ const deleteAbility = () => {
       </ul>
     </details>
     <details
+      :open="isLargeScreen"
+      @click="preventToggleOnLargeScreen"
       class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300 pb-1"
     >
       <summary>
-        <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
+        <h2 class="text-center lg:text-left text-gray-100 my-4 text-xl font-bold">
           Habilidades de classe
           <i
-            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300"
+            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300 lg:opacity-0"
           ></i>
         </h2>
       </summary>
@@ -239,13 +345,15 @@ const deleteAbility = () => {
       </div>
     </details>
     <details
+      :open="isLargeScreen"
+      @click="preventToggleOnLargeScreen"
       class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300 pb-1"
     >
       <summary>
-        <h2 class="text-center text-gray-100 my-4 text-xl font-bold">
+        <h2 class="text-center lg:text-left text-gray-100 my-4 text-xl font-bold">
           Habilidades de raça
           <i
-            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300"
+            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300 lg:opacity-0"
           ></i>
         </h2>
       </summary>
@@ -278,65 +386,7 @@ const deleteAbility = () => {
     </details>
     <AppModal ref="savesModal">
       <h3 class="text-center text-2xl font-bold">Resistências</h3>
-      <p class="text-xl mb-2">Fortitude: {{ savings.fortitude }}</p>
-      <ul class="flex">
-        <li class="outline w-full p-2">
-          <span class="block font-bold">1/2 do nível</span>
-          {{ halfLevel }}
-        </li>
-        <li class="outline w-full p-2">
-          <span class="block font-bold">Mod. Const</span>
-          {{ modifiers.constitution }}
-        </li>
-        <li class="outline w-full p-2">
-          <label for="fortitude_other" class="block font-bold">Outros</label>
-          <AppInput
-            type="number"
-            id="fortitude_other"
-            v-model="charStore.currentChar.saving.fortitude_other"
-          />
-        </li>
-      </ul>
-      <!--  -->
-      <p class="text-xl mb-2">Reflexo: {{ savings.reflex }}</p>
-      <ul class="flex">
-        <li class="outline w-full p-2">
-          <span class="block font-bold">1/2 do nível</span>
-          {{ halfLevel }}
-        </li>
-        <li class="outline w-full p-2">
-          <span class="block font-bold">Mod. Dest</span>
-          {{ modifiers.dexterity }}
-        </li>
-        <li class="outline w-full p-2">
-          <label for="reflex_other" class="block font-bold">Outros</label>
-          <AppInput
-            type="number"
-            id="reflex_other"
-            v-model="charStore.currentChar.saving.reflex_other"
-          />
-        </li>
-      </ul>
-      <!--  -->
-      <p class="text-xl my-2">Vontade {{ savings.will }}:</p>
-      <ul class="flex">
-        <li class="outline w-full p-2">
-          <span class="block font-bold">1/2 do nível</span>
-          {{ halfLevel }}
-        </li>
-        <li class="outline w-full p-2">
-          <span class="block font-bold">Mod. Sab</span>
-          {{ modifiers.wisdom }}
-        </li>
-        <li class="outline w-full p-2">
-          <label for="will_other" class="block font-bold">Outros</label>
-          <AppInput
-            type="number"
-            id="will_other"
-            v-model="charStore.currentChar.saving.will_other"
-          />
-        </li>
-      </ul>
+      <ReuseTemplate />
     </AppModal>
     <AppModal ref="classAbilitiesModal">
       <h2 class="text-center text-gray-100 font-bold my-4 text-2xl">
@@ -404,5 +454,5 @@ const deleteAbility = () => {
         <AppButton @click="editAbility()">Editar Habilidade</AppButton>
       </div>
     </AppModal>
-  </template>
+  </div>
 </template>

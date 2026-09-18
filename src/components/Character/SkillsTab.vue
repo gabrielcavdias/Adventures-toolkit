@@ -123,7 +123,7 @@ const deleteActiveSkill = () => {
         <label :for="`${skill.name}_other`" class="block">outro</label>
         <input
           v-model="skill.other"
-          class="w-7 px-2 bg-white text-black rounded-md"
+          class="w-12 px-2 bg-white text-black rounded-md"
           type="number"
           :name="`${skill.name}_other`"
         />

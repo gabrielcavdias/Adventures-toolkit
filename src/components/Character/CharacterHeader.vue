@@ -11,13 +11,16 @@ import AppButton from '../AppButton.vue'
 import { convertToSlug, getSizeModifier } from '../../helpers/functions'
 import { SIZE_OPTIONS } from '../../helpers/constants'
 import { encode } from '../../helpers/steganography'
+import { useMediaQuery } from '@vueuse/core'
 
 const charStore = useCharacterStore()
 const { modifiers } = defineProps<{ modifiers: Record<Attribute, number> }>()
+const isLargeScreen = useMediaQuery('(min-width: 1024px)')
 
 const lifePointsCalc = ref(0)
 const lifeModal = ref<InstanceType<typeof AppModal> | null>(null)
 const acModal = ref<InstanceType<typeof AppModal> | null>(null)
+const nameModal = ref<InstanceType<typeof AppModal> | null>(null)
 const exportModal = ref<InstanceType<typeof AppModal> | null>(null)
 const changeLifePoints = (action: 'add' | 'subtract') => {
   if (action == 'subtract') {
@@ -104,121 +107,145 @@ const exportAsImage = async () => {
 }
 </script>
 <template>
-  <label class="block size-24 mt-6 mx-auto rounded-full overflow-hidden bg-neutral-700 cursor-pointer">
-    <img v-if="charStore.currentChar?.image" :src="charStore.currentChar.image" class="size-full object-cover" />
-    <input type="file" accept="image/*" class="hidden" @change="uploadImage" />
-  </label>
-  <h2 class="text-gray-100 text-3xl mt-6 mx-2 text-center">{{ charStore.currentChar?.name }}</h2>
-
-  <details
-    class="group flex flex-col-reverse max-h-10 open:max-h-[300px] overflow-hidden transition-all duration-300"
-  >
-    <summary class="text-center text-3xl text-gray-100 h-10">
-      <i class="fa-solid fa-chevron-up group-open:rotate-180 transition-all duration-300"></i>
-    </summary>
-    <div>
-      <p class="text-gray-100 text-center text-xl">
-        Nível:
-        <span class="block">
-          <button @click="charStore.currentChar!.level -= 1">
-            <i class="fa-solid fa-chevron-down"></i>
-          </button>
-          {{ charStore.currentChar?.level.toString().padStart(2, '0') }}
-          <button @click="charStore.currentChar!.level += 1">
-            <i class="fa-solid fa-chevron-up"></i>
-          </button>
-        </span>
-      </p>
-      <ul
-        class="grid grid-cols-3 items-center gap-2 text-gray-100 mx-2"
-        v-if="charStore.currentChar"
+  <div class="flex flex-col lg:flex-row lg:justify-center lg:items-center">
+    <div class="flex flex-col lg:flex-row lg:items-center">
+      <label
+        class="block size-24 lg:size-40 mt-6 mx-auto lg:mx-0 rounded-full overflow-hidden bg-neutral-700 cursor-pointer"
       >
-        <li>
-          <label for="class" class="mt-2 text-lg font-semibold mb-1 block">Classe</label>
-          <AppInput type="text" id="class" v-model="charStore.currentChar.class" />
-        </li>
-        <li>
-          <label for="race" class="mt-2 text-lg font-semibold mb-1 block">Raça</label>
-          <AppInput type="text" id="race" v-model="charStore.currentChar.race" />
-        </li>
-        <li>
-          <label for="bab" class="mt-2 text-lg font-semibold mb-1 block">BBA</label>
-          <AppInput type="number" id="bab" v-model="charStore.currentChar.bab" />
-        </li>
-        <li>
-          <label for="att_hand" class="mt-2 text-lg font-semibold mb-1 block">Tamanho:</label>
-          <select
-            id="att_hand"
-            class="outline py-2 px-4 w-full rounded-md"
-            v-model="charStore.currentChar.size"
+        <img
+          v-if="charStore.currentChar?.image"
+          :src="charStore.currentChar.image"
+          class="size-full object-cover"
+        />
+        <input type="file" accept="image/*" class="hidden" @change="uploadImage" />
+      </label>
+      <h2
+        class="text-gray-100 text-3xl mt-6 mx-2 text-center lg:text-left cursor-pointer"
+        @click="nameModal?.openModal()"
+      >
+        {{ charStore.currentChar?.name }}
+      </h2>
+    </div>
+    <div class="flex flex-col lg:flex-row-reverse">
+      <details
+        :open="isLargeScreen"
+        class="group flex flex-col-reverse lg:flex-row max-h-10 open:max-h-[300px] overflow-hidden transition-all duration-300 lg:pr-6 lg:py-1"
+      >
+        <summary class="text-center text-3xl text-gray-100 h-10 lg:hidden">
+          <i class="fa-solid fa-chevron-up group-open:rotate-180 transition-all duration-300"></i>
+        </summary>
+        <div class="flex flex-col lg:flex-row lg:items-center lg:gap-8 lg:ml-auto">
+          <p class="text-gray-100 text-center text-xl">
+            Nível:
+            <span class="block">
+              <button @click="charStore.currentChar!.level -= 1">
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+              {{ charStore.currentChar?.level.toString().padStart(2, '0') }}
+              <button @click="charStore.currentChar!.level += 1">
+                <i class="fa-solid fa-chevron-up"></i>
+              </button>
+            </span>
+          </p>
+          <ul
+            class="grid grid-cols-3 items-center gap-2 text-gray-100 mx-2"
+            v-if="charStore.currentChar"
           >
-            <option v-for="size in SIZE_OPTIONS" :value="size.size" :key="size.label">
-              {{ size.label }}
-            </option>
-          </select>
-        </li>
-        <li>
-          <label for="alignment" class="mt-2 text-lg font-semibold mb-1 block">Tendência</label>
-          <AppInput type="text" id="alignment" v-model="charStore.currentChar.alignment" />
-        </li>
-        <li>
-          <label for="alignment" class="mt-2 text-lg font-semibold mb-1 block">Pts. de ação</label>
-          <AppInput type="text" id="alignment" v-model="charStore.currentChar.action_points" />
-        </li>
-      </ul>
-      <div class="flex justify-center my-4">
-        <AppButton class="inline-flex items-center gap-2" @click="exportModal?.openModal()">
-          Exportar <i class="fa-solid fa-file-export"></i>
-        </AppButton>
+            <li>
+              <label for="class" class="mt-2 text-lg font-semibold mb-1 block">Classe</label>
+              <AppInput type="text" id="class" v-model="charStore.currentChar.class" />
+            </li>
+            <li>
+              <label for="race" class="mt-2 text-lg font-semibold mb-1 block">Raça</label>
+              <AppInput type="text" id="race" v-model="charStore.currentChar.race" />
+            </li>
+            <li>
+              <label for="bab" class="mt-2 text-lg font-semibold mb-1 block">BBA</label>
+              <AppInput type="number" id="bab" v-model="charStore.currentChar.bab" />
+            </li>
+            <li>
+              <label for="att_hand" class="mt-2 text-lg font-semibold mb-1 block">Tamanho:</label>
+              <select
+                id="att_hand"
+                class="outline py-2 px-4 w-full rounded-md"
+                v-model="charStore.currentChar.size"
+              >
+                <option v-for="size in SIZE_OPTIONS" :value="size.size" :key="size.label">
+                  {{ size.label }}
+                </option>
+              </select>
+            </li>
+            <li>
+              <label for="alignment" class="mt-2 text-lg font-semibold mb-1 block">Tendência</label>
+              <AppInput type="text" id="alignment" v-model="charStore.currentChar.alignment" />
+            </li>
+            <li>
+              <label for="alignment" class="mt-2 text-lg font-semibold mb-1 block"
+                >Pts. de ação</label
+              >
+              <AppInput type="text" id="alignment" v-model="charStore.currentChar.action_points" />
+            </li>
+          </ul>
+          <div class="flex justify-center my-4">
+            <AppButton class="inline-flex items-center gap-2" @click="exportModal?.openModal()">
+              Exportar <i class="fa-solid fa-file-export"></i>
+            </AppButton>
+          </div>
+        </div>
+      </details>
+      <!-- Life and AC -->
+      <div class="mt-4 grid grid-cols-2 gap-3 mx-2 text-2xl">
+        <div
+          class="relative outline py-4 text-center rounded-xl text-gray-100 font-bold text-shadow-purple text-shadow-purple-400 lg:min-w-38 lg:h-fit lg:outline-0"
+          @click="lifeModal?.openModal()"
+        >
+          <span
+            class="absolute inset-0 flex items-center justify-center z-10"
+            v-if="charStore.currentChar"
+          >
+            <button @click.stop="subtractLife(1)">
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <span
+              :class="{
+                'text-green-400 font-bold': charStore.currentChar.temp_lp > 0,
+                'text-red-500 font-bold': charStore.currentChar.current_lp < 0,
+              }"
+              >{{ charStore.currentChar.current_lp + charStore.currentChar.temp_lp }}</span
+            >
+            / {{ charStore.currentChar?.life_points }}
+            <button @click.stop="addLife(1)">
+              <i class="fa-solid fa-chevron-up"></i>
+            </button>
+          </span>
+          <Transition>
+            <HeartPotion
+              class="size-24 text-purple-600 mx-auto"
+              v-if="
+                charStore.currentChar &&
+                charStore.currentChar?.current_lp >
+                  Math.floor(charStore.currentChar?.life_points / 2) * -1
+              "
+            />
+            <SkeletonBones class="size-24 text-purple-600 mx-auto drop-shadow-2xl" v-else />
+          </Transition>
+        </div>
+        <p
+          class="relative outline py-4 text-center rounded-xl text-gray-100 lg:min-w-38 lg:h-fit lg:outline-0"
+          @click="acModal?.openModal()"
+        >
+          <span class="absolute inset-0 flex items-center justify-center">
+            {{ computedAc }}
+          </span>
+          <AcShield class="size-24 text-purple-600 mx-auto" />
+        </p>
       </div>
     </div>
-  </details>
-  <div class="mt-4 grid grid-cols-2 gap-3 mx-2 text-2xl">
-    <div
-      class="relative outline py-4 text-center rounded-xl text-gray-100 font-bold text-shadow-purple text-shadow-purple-400"
-      @click="lifeModal?.openModal()"
-    >
-      <span
-        class="absolute inset-0 flex items-center justify-center z-10"
-        v-if="charStore.currentChar"
-      >
-        <button @click.stop="subtractLife(1)">
-          <i class="fa-solid fa-chevron-down"></i>
-        </button>
-        <span
-          :class="{
-            'text-green-400 font-bold': charStore.currentChar.temp_lp > 0,
-            'text-red-500 font-bold': charStore.currentChar.current_lp < 0,
-          }"
-          >{{ charStore.currentChar.current_lp + charStore.currentChar.temp_lp }}</span
-        >
-        / {{ charStore.currentChar?.life_points }}
-        <button @click.stop="addLife(1)">
-          <i class="fa-solid fa-chevron-up"></i>
-        </button>
-      </span>
-      <Transition>
-        <HeartPotion
-          class="size-24 text-purple-600 mx-auto"
-          v-if="
-            charStore.currentChar &&
-            charStore.currentChar?.current_lp >
-              Math.floor(charStore.currentChar?.life_points / 2) * -1
-          "
-        />
-        <SkeletonBones class="size-24 text-purple-600 mx-auto drop-shadow-2xl" v-else />
-      </Transition>
-    </div>
-    <p
-      class="relative outline py-4 text-center rounded-xl text-gray-100"
-      @click="acModal?.openModal()"
-    >
-      <span class="absolute inset-0 flex items-center justify-center">
-        {{ computedAc }}
-      </span>
-      <AcShield class="size-24 text-purple-600 mx-auto" />
-    </p>
   </div>
+  <AppModal ref="nameModal" v-if="charStore.currentChar">
+    <label for="name" class="text-lg font-semibold mb-1 block">Nome</label>
+    <AppInput type="text" id="name" v-model="charStore.currentChar.name" />
+  </AppModal>
   <AppModal ref="lifeModal" v-if="charStore.currentChar">
     <label for="temp_lp" class="text-lg font-semibold mb-1 block">Pontos de vida temporários</label>
     <AppInput type="number" id="temp_lp" v-model="charStore.currentChar.temp_lp" />

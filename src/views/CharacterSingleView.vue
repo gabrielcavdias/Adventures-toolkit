@@ -93,16 +93,19 @@ onMounted(() => {
 <template>
   <CharacterHeader :modifiers="modifiers" />
 
-  <ul class="mt-6 mx-2 flex justify-between px-8 text-gray-100 bg-neutral-600 rounded-xl">
+  <ul
+    class="mt-6 mx-2 flex justify-between px-8 text-gray-100 bg-neutral-600 rounded-xl lg:justify-center lg:gap-16 lg:px-4 lg:text-xl"
+  >
     <template v-for="[label, key] in tabs">
       <li
         @click="currentTab = key"
         :key="key"
         v-if="key !== 'spells' || charStore.currentChar?.spell_ids.length"
         :class="[
-          'py-2',
+          'py-2 lg:cursor-pointer lg:transition lg:hover:text-purple-300 lg:py-3 lg:px-4',
           {
-            'font-bold text-purple-400 border-b-2 border-purple-400': currentTab == key,
+            'font-bold text-purple-400 lg:text-white border-b-2 border-purple-400 lg:bg-purple-600':
+              currentTab == key,
           },
         ]"
       >

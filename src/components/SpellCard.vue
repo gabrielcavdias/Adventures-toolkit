@@ -17,7 +17,7 @@ const parsedLevel = computed(() => {
   return level
 })
 const emit = defineEmits(['close'])
-const dictionary = [
+const dictionary: [string, keyof Spell][] = [
   ['Alcance', 'range'],
   ['Alvo', 'target'],
   ['Duração', 'duration'],
@@ -39,11 +39,11 @@ const dictionary = [
       }})
     </p>
     <template v-for="[label, key] in dictionary" :key="key">
-      <p v-if="spell[key as keyof typeof spell]">
+      <p v-if="spell[key]">
         <span class="font-bold">
           {{ label }}
         </span>
-        {{ spell[key as keyof typeof spell] }}
+        {{ spell[key] }}
       </p>
     </template>
     <p class="mt-4">{{ spell.description }}</p>
