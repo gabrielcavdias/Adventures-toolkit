@@ -76,7 +76,11 @@ const openAddSkillMenu = () => {
 }
 const addNewSkill = () => {
   if (newSkill.name === '' || !charStore.currentChar) return
-  charStore.currentChar.skills = [...charStore.currentChar.skills, { ...newSkill }]
+  const orderdSkiils = [...charStore.currentChar.skills, { ...newSkill }]
+  orderdSkiils.sort((a, b) => {
+    return a.name.localeCompare(b.name)
+  })
+  charStore.currentChar.skills = orderdSkiils
   Object.assign(newSkill, {
     name: '',
     trained: false,
