@@ -82,7 +82,10 @@ const deleteEquipment = (index: number) => {
   </div>
   <h3 class="mt-4 font-bold text-center text-gray-100 text-xl">Dinheiro</h3>
 
-  <ul class="mt-2 grid grid-cols-4 text-gray-100 justify-items-start" v-if="character">
+  <ul
+    class="mt-2 grid grid-cols-4 text-gray-100 justify-items-center lg:w-fit lg:mx-auto lg:gap-5"
+    v-if="character"
+  >
     <li class="flex gap-2">
       <span>T$:</span>
       <input type="number" class="pl-2 outline w-16" v-model="character.money.ts" />

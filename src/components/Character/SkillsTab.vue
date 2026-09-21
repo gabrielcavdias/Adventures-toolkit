@@ -101,7 +101,7 @@ const deleteActiveSkill = () => {
   <div class="mt-4 flex justify-end mr-2">
     <AppButton @click="openAddSkillMenu">Adicionar Perícia</AppButton>
   </div>
-  <ul class="mt-4 mx-2 grid gap-2 text-gray-100">
+  <ul class="mt-4 mx-2 grid lg:grid-cols-3 lg:px-8 gap-2 text-gray-100">
     <li
       v-for="(skill, index) in sortedSkills"
       :key="skill.name"
