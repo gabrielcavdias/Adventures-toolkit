@@ -1361,6 +1361,21 @@
     "id": 88
   },
   {
+    "title": "Benção",
+    "date": "2018-01-01",
+    "source": "Módulo Básico 166, Módulo Básico Edição Revisada 166.",
+    "tags": ["nenhum", "bardo"],
+    "range": "9m",
+    "duration": "1 minuto.",
+    "target": "Todos os aliados a 9m",
+    "divine_level": 1,
+    "arcane_level": null,
+    "origins": ["divina"],
+    "descriptors": ["encantamento"],
+    "description": "Seus aliados recebem um bônus de +1 nas jogadas de ataque e nos testes de resistência contra medo. Bênção anula perdição",
+    "id": 839
+  },
+  {
     "title": "Bala de Força",
     "date": "2018-01-01",
     "source": "Mundo dos Deuses 148.",
