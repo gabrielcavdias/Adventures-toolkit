@@ -253,8 +253,6 @@ async function handleJsonfile(file: File) {
 async function handleImageFile(file: File) {
   const dataUrl = await readFileAsDataUrl(file)
   const decoded = await decode(dataUrl)
-  console.log('decoded')
-  console.log(decoded)
   const char = JSON.parse(decodeURIComponent(decoded))
   char.image = dataUrl
   return char

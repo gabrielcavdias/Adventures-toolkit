@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Spell } from '../helpers/types'
 import { capitalize } from '../helpers/functions'
 
-const { spell } = defineProps<{
+const { spell, showPinButton = false } = defineProps<{
   spell: Spell | undefined
+  showPinButton?: boolean
 }>()
+const innerBody = ref<HTMLDivElement | null>(null)
 const parsedLevel = computed(() => {
   let level = ''
   if (spell?.origins.includes('arcana')) {
@@ -16,7 +18,18 @@ const parsedLevel = computed(() => {
   }
   return level
 })
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'pin', html: string): void
+}>()
+
+const pinHtml = () => {
+  if (!innerBody.value) return
+  const innerHtml = innerBody.value.innerHTML
+  emit('pin', innerHtml)
+  emit('close')
+}
+
 const dictionary: [string, keyof Spell][] = [
   ['Alcance', 'range'],
   ['Alvo', 'target'],
@@ -26,26 +39,33 @@ const dictionary: [string, keyof Spell][] = [
 </script>
 <template>
   <div
-    class="absolute -translate-y-[400px] w-full rounded-xl bg-neutral-800 overflow-y-auto h-[400px] text-gray-100 px-3 pb-5"
+    class="absolute -translate-y-[400px] w-full rounded-xl bg-neutral-800 overflow-y-auto h-[400px] text-gray-100 px-5 pb-5"
     v-if="spell"
   >
-    <div class="flex justify-end pt-2 pr-2">
+    <div class="flex justify-between pt-2 pr-2">
+      <div>
+        <button @click="pinHtml" class="cursor-pointer" v-if="showPinButton">
+          <i class="fa-solid fa-thumbtack"></i>
+        </button>
+      </div>
       <button @click="emit('close')" class="p-3">X</button>
     </div>
-    <h2 class="font-bold text-3xl">{{ spell.title }}</h2>
-    <p>
-      <span class="font-bold">Nível</span> {{ parsedLevel }} ({{
-        spell.descriptors.map(capitalize).join(', ')
-      }})
-    </p>
-    <template v-for="[label, key] in dictionary" :key="key">
-      <p v-if="spell[key]">
-        <span class="font-bold">
-          {{ label }}
-        </span>
-        {{ spell[key] }}
+    <div ref="innerBody">
+      <h2 class="font-bold text-3xl">{{ spell.title }}</h2>
+      <p>
+        <span class="font-bold">Nível</span> {{ parsedLevel }} ({{
+          spell.descriptors.map(capitalize).join(', ')
+        }})
       </p>
-    </template>
-    <p class="mt-4">{{ spell.description }}</p>
+      <template v-for="[label, key] in dictionary" :key="key">
+        <p v-if="spell[key]">
+          <span class="font-bold">
+            {{ label }}
+          </span>
+          {{ spell[key] }}
+        </p>
+      </template>
+      <p class="mt-4">{{ spell.description }}</p>
+    </div>
   </div>
 </template>

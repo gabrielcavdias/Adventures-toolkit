@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import data from '../data/spells.json'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import { type Character, type Spell } from '../helpers/types'
 import SpellCard from '../components/SpellCard.vue'
 import SpellsList from '../components/SpellsList.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { until } from '@vueuse/core'
 import { useCharacterStore } from '../stores/character-store'
 import SkillsTab from '../components/Character/SkillsTab.vue'
 import CharacterHeader from '../components/Character/CharacterHeader.vue'
@@ -15,9 +15,11 @@ import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AppModal from '../components/AppModal.vue'
 import EquipmentTab from '../components/Character/EquipmentTab.vue'
+import { useFixedBoxStore } from '../stores/fixed-box-store'
 
 type Tab = 'general' | 'skills' | 'spells' | 'combat' | 'equips'
-const parsedData = ref<Spell[]>()
+const parsedData = shallowRef<Spell[]>()
+let data: Spell[] = []
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +34,8 @@ const tabs: [string, Tab][] = [
   ['Combate', 'combat'],
   ['Inventário', 'equips'],
 ]
+
+const fixedBox = useFixedBoxStore()
 
 const modifiers = computed(() => ({
   strength: Math.floor(((charStore.currentChar?.attributes.strength ?? 10) - 10) / 2),
@@ -75,17 +79,65 @@ const deleteSpell = (spell: Spell) => {
   if (charStore.currentChar.spell_ids.length > 0) return
   currentTab.value = 'general'
 }
+const prepareSpell = (spell: Spell) => {
+  if (!charStore.currentChar) return
+  const alreadyPrepared = charStore.currentChar.spells_prepared?.find(
+    (prepared) => prepared.id == spell.id,
+  )
+  if (alreadyPrepared) {
+    charStore.currentChar.spells_prepared = [
+      ...charStore.currentChar.spells_prepared!.filter((prepared) => prepared.id !== spell.id),
+      {
+        id: alreadyPrepared.id,
+        prepared: alreadyPrepared.prepared + 1,
+      },
+    ]
+    return
+  }
+  charStore.currentChar.spells_prepared = [
+    ...(charStore.currentChar.spells_prepared ?? []),
+    {
+      id: spell.id,
+      prepared: 1,
+    },
+  ]
+}
+
+const unprepareSpell = (spell: Spell) => {
+  if (!charStore.currentChar) return
+  const alreadyPrepared = charStore.currentChar.spells_prepared?.find(
+    (prepared) => prepared.id === spell.id,
+  )
+  if (!alreadyPrepared) return
+  if (alreadyPrepared.prepared <= 1) {
+    charStore.currentChar.spells_prepared = charStore.currentChar.spells_prepared!.filter(
+      (prepared) => prepared.id !== spell.id,
+    )
+    return
+  }
+  charStore.currentChar.spells_prepared = [
+    ...charStore.currentChar.spells_prepared!.filter((prepared) => prepared.id !== spell.id),
+    {
+      id: alreadyPrepared.id,
+      prepared: alreadyPrepared.prepared - 1,
+    },
+  ]
+}
+
 const parseSpells = () => {
   parsedData.value = data.filter((spell) => charStore.currentChar?.spell_ids.includes(spell.id))
 }
-onMounted(() => {
+onMounted(async () => {
+  await until(() => charStore.isFinished).toBe(true)
   const char = charStore.characters.find((char: Character) => char.slug == route.params.slug)
   if (!char) {
     router.push({
       name: 'chars',
     })
+    return
   }
   charStore.currentChar = char
+  data = (await import('../data/spells.json')).default
   parseSpells()
 })
 </script>
@@ -150,11 +202,16 @@ onMounted(() => {
       :data="parsedData"
       @set-active-spell="(sp) => (activeSpell = sp)"
       @delete="deleteSpell"
+      @prepare-spell="prepareSpell"
+      @unprepare-spell="unprepareSpell"
       :active-spell="activeSpell"
+      :prepared-spells="charStore.currentChar?.spells_prepared"
       :show-learn="false"
     />
     <Transition name="fadeup">
       <SpellCard
+        @pin="(data) => (fixedBox.html = data)"
+        :show-pin-button="true"
         :spell="activeSpell"
         @close="activeSpell = undefined"
         v-if="activeSpell !== undefined"
@@ -182,6 +239,29 @@ onMounted(() => {
   <template v-if="currentTab == 'equips'">
     <EquipmentTab />
   </template>
+  <div
+    class="fixed top-0 text-white bg-neutral-700 w-full p-4 z-10 border-b"
+    v-if="fixedBox.html?.length"
+  >
+    <details class="group max-h-10 open:max-h-[3000px] overflow-hidden transition-all duration-300">
+      <summary>
+        <h2 class="text-center lg:text-left text-gray-100 my-4 text-xl font-bold">
+          Fixado
+          <i
+            class="fa-solid fa-chevron-down -rotate-90 group-open:rotate-0 transiton duration-300"
+          ></i>
+        </h2>
+        <div>
+          <div v-html="fixedBox.html"></div>
+          <div class="mt-2 text-center">
+            <button class="px-4 py-2 bg-purple-600 rounded-md" @click="fixedBox.html = ''">
+              Desafixar
+            </button>
+          </div>
+        </div>
+      </summary>
+    </details>
+  </div>
 </template>
 <style scoped>
 .text-shadow-purple {

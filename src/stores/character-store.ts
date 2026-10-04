@@ -1,10 +1,16 @@
-import { useLocalStorage } from '@vueuse/core'
+import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
 import { defineStore } from 'pinia'
 import type { Character, Equipment } from '../helpers/types'
 import { computed, ref } from 'vue'
 
 export const useCharacterStore = defineStore('character', () => {
-  const characters = useLocalStorage<Character[]>('characters', [])
+  const { data: characters, isFinished } = useIDBKeyval<Character[]>('characters', [], {
+    serializer: {
+      read: (v) => v as Character[],
+      // IndexedDB can't clone Vue proxies
+      write: (v) => JSON.parse(JSON.stringify(v)),
+    },
+  })
   const currentChar = ref<Character>()
 
   const curCharTotalCarryWeight = computed(() =>
@@ -18,5 +24,5 @@ export const useCharacterStore = defineStore('character', () => {
     () => curCharTotalCarryWeight.value > (currentChar.value?.attributes.strength ?? 0) * 3,
   )
 
-  return { characters, currentChar, isCurCharOverEncumbered, curCharTotalCarryWeight }
+  return { characters, currentChar, isFinished, isCurCharOverEncumbered, curCharTotalCarryWeight }
 })

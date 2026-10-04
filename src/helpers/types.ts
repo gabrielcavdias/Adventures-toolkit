@@ -96,6 +96,11 @@ export type Expandable = {
   body: string
 }
 
+export type PreparedSpell = {
+  id: number
+  prepared: number
+}
+
 export type Character = {
   name: string
   slug: string
@@ -127,6 +132,7 @@ export type Character = {
   money: Money
   languages: string[]
   spell_ids: number[]
+  spells_prepared?: PreparedSpell[]
   notes: Expandable[]
   feats: Expandable[]
   skills: Skill[]

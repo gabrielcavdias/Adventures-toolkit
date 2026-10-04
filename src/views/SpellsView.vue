@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import data from '../data/spells.json'
+import { onMounted, ref, shallowRef } from 'vue'
 import type { Spell } from '../helpers/types'
 import SpellCard from '../components/SpellCard.vue'
 import SpellsList from '../components/SpellsList.vue'
 
-const parsedData = ref<Spell[]>()
+const parsedData = shallowRef<Spell[]>()
 const search = ref('')
 const activeSpell = ref<Spell>()
 
-onMounted(() => {
+onMounted(async () => {
+  const { default: data } = await import('../data/spells.json')
   parsedData.value = data.sort((a, b) => {
     const aLevel = (
       a.origins.includes('divina') && !a.origins.includes('arcana')
