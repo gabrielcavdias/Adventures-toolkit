@@ -16,6 +16,7 @@ import AppButton from '../components/AppButton.vue'
 import AppModal from '../components/AppModal.vue'
 import EquipmentTab from '../components/Character/EquipmentTab.vue'
 import { useFixedBoxStore } from '../stores/fixed-box-store'
+import WizardHat from '../components/Icons/WizardHat.vue'
 
 type Tab = 'general' | 'skills' | 'spells' | 'combat' | 'equips'
 const parsedData = shallowRef<Spell[]>()
@@ -49,6 +50,15 @@ const modifiers = computed(() => ({
 const manaModal = ref<InstanceType<typeof AppModal> | null>(null)
 
 const manaPointsCalc = ref(0)
+
+const difficultClass = computed(() => {
+  if (!charStore.currentChar?.spell_attribute) {
+    return 10
+  }
+  const modifier = modifiers.value[charStore.currentChar.spell_attribute]
+  return 10 + modifier
+})
+
 const changeMagicPoints = (action: 'add' | 'subtract') => {
   if (action == 'subtract') {
     substractMana(manaPointsCalc.value)
@@ -173,29 +183,51 @@ onMounted(async () => {
     <SkillsTab :modifiers="modifiers" />
   </template>
   <template v-if="currentTab == 'spells'">
-    <div
-      class="relative outline text-center rounded-xl text-gray-100 font-bold text-shadow-purple text-shadow-purple-400 max-w-[200px] py-4 mt-4 mx-auto text-2xl"
-      @click="manaModal?.openModal()"
-    >
-      <span
-        class="absolute inset-0 flex items-center justify-center z-10"
-        v-if="charStore.currentChar"
+    <div class="grid grid-cols-2 justify-items-center gap-8 w-fit mx-auto">
+      <div
+        class="relative outline text-center rounded-xl text-gray-100 font-bold text-shadow-purple text-shadow-purple-400 w-[200px] py-4 mt-4 text-2xl"
       >
-        <button @click.stop="substractMana(1)">
-          <i class="fa-solid fa-chevron-down"></i>
-        </button>
+        <article class="absolute inset-0 flex flex-col items-center justify-center">
+          <select
+            class="text-sm text-center appearance-none font-bold px-3"
+            v-model="charStore.currentChar!.spell_attribute"
+          >
+            <option value="" disabled>Selecione um</option>
+            <option value="strength" class="text-black">Força</option>
+            <option value="dexterity" class="text-black">Destreza</option>
+            <option value="contitution" class="text-black">Contituição</option>
+            <option value="intelligence" class="text-black">Inteligência</option>
+            <option value="wisdom" class="text-black">Sabedoria</option>
+            <option value="charisma" class="text-black">Carisma</option>
+          </select>
+          <p class="text-4xl">{{ difficultClass }}</p>
+        </article>
+        <WizardHat width="100" class="text-purple-600 mx-auto" />
+      </div>
+      <div
+        class="relative outline text-center rounded-xl text-gray-100 font-bold text-shadow-purple text-shadow-purple-400 w-[200px] py-4 mt-4 text-2xl"
+        @click="manaModal?.openModal()"
+      >
         <span
-          :class="{
-            'text-red-500 font-bold': charStore.currentChar.current_mp < 0,
-          }"
-          >{{ charStore.currentChar.current_mp }}</span
+          class="absolute inset-0 flex items-center justify-center z-10"
+          v-if="charStore.currentChar"
         >
-        / {{ charStore.currentChar?.magic_ponts }}
-        <button @click.stop="addMana(1)">
-          <i class="fa-solid fa-chevron-up"></i>
-        </button>
-      </span>
-      <ManaPotion width="100" class="text-purple-600 mx-auto" />
+          <button @click.stop="substractMana(1)">
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <span
+            :class="{
+              'text-red-500 font-bold': charStore.currentChar.current_mp < 0,
+            }"
+            >{{ charStore.currentChar.current_mp }}</span
+          >
+          / {{ charStore.currentChar?.magic_ponts }}
+          <button @click.stop="addMana(1)">
+            <i class="fa-solid fa-chevron-up"></i>
+          </button>
+        </span>
+        <ManaPotion width="100" class="text-purple-600 mx-auto" />
+      </div>
     </div>
     <SpellsList
       v-model="search"

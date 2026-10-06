@@ -133,6 +133,7 @@ export type Character = {
   languages: string[]
   spell_ids: number[]
   spells_prepared?: PreparedSpell[]
+  spell_attribute?: Attribute
   notes: Expandable[]
   feats: Expandable[]
   skills: Skill[]
