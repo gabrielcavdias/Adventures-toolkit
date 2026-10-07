@@ -138,3 +138,17 @@ export type Character = {
   feats: Expandable[]
   skills: Skill[]
 }
+
+export type NPC = {
+  slug: string
+  name: string
+  info: string
+  life: {
+    current: number
+    total: number
+  }
+  mana: {
+    current: number
+    total: number
+  }
+}

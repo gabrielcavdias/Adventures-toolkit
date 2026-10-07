@@ -20,9 +20,14 @@ const router = createRouter({
       component: () => import('../views/CharacterSingleView.vue'),
     },
     {
-      path: '/barra-de-vida',
+      path: '/npcs',
       name: 'lifebars',
-      component: () => import('../views/LifeBarsView.vue'),
+      component: () => import('../views/NPCsView.vue'),
+    },
+    {
+      path: '/mestre',
+      name: 'gmtools',
+      component: () => import('../views/GMToolsView.vue'),
     },
   ],
 })

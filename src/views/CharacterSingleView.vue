@@ -250,10 +250,10 @@ onMounted(async () => {
       />
     </Transition>
     <AppModal ref="manaModal" v-if="charStore.currentChar">
-      <label for="life_points" class="mt-2 text-lg font-semibold mb-1 block"
+      <label for="mana_points" class="mt-2 text-lg font-semibold mb-1 block"
         >Pontos mana totais</label
       >
-      <AppInput type="number" id="life_points" v-model="charStore.currentChar.magic_ponts" />
+      <AppInput type="number" id="mana_points" v-model="charStore.currentChar.magic_ponts" />
 
       <div class="mt-4 outline p-2">
         <label for="calc" class="mt-2 text-lg font-semibold mb-1 block">Alterar mana</label>

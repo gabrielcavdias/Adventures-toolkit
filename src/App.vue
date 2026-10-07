@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router'
-const route = useRoute()
+import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
@@ -28,13 +27,13 @@ const route = useRoute()
           Personagens
         </RouterLink>
       </li>
-      <li v-if="route.query.type == 'gm'">
+      <li>
         <RouterLink
-          to="/barra-de-vida"
+          to="/mestre"
           class="hover:text-purple-300 transition"
           :active-class="'text-purple-500'"
         >
-          Barra de vida
+          Mestre
         </RouterLink>
       </li>
     </ul>
