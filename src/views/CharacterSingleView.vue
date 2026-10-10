@@ -26,6 +26,7 @@ const route = useRoute()
 const router = useRouter()
 const search = ref('')
 const activeSpell = ref<Spell>()
+const spellToBeRemoved = ref<Spell>()
 const charStore = useCharacterStore()
 const currentTab = ref<Tab>('general')
 const tabs: [string, Tab][] = [
@@ -48,7 +49,7 @@ const modifiers = computed(() => ({
 }))
 
 const manaModal = ref<InstanceType<typeof AppModal> | null>(null)
-
+const deleteSpellModal = ref<InstanceType<typeof AppModal> | null>(null)
 const manaPointsCalc = ref(0)
 
 const difficultClass = computed(() => {
@@ -81,14 +82,26 @@ const addMana = (qtd: number) => {
   )
 }
 
-const deleteSpell = (spell: Spell) => {
+const openDeleteSpellModal = (spell: Spell) => {
+  spellToBeRemoved.value = spell
+  deleteSpellModal.value?.openModal()
+}
+
+const deleteSpell = () => {
   if (!charStore.currentChar) return
-  charStore.currentChar.spell_ids = charStore.currentChar.spell_ids.filter((sp) => sp !== spell.id)
+  if (!spellToBeRemoved.value) return
+  charStore.currentChar.spell_ids = charStore.currentChar.spell_ids.filter(
+    (sp) => sp !== spellToBeRemoved.value?.id,
+  )
   activeSpell.value = undefined
   parseSpells()
-  if (charStore.currentChar.spell_ids.length > 0) return
-  currentTab.value = 'general'
+  deleteSpellModal.value?.closeModal()
+  spellToBeRemoved.value = undefined
+  if (charStore.currentChar.spell_ids.length == 0) {
+    currentTab.value = 'general'
+  }
 }
+
 const prepareSpell = (spell: Spell) => {
   if (!charStore.currentChar) return
   const alreadyPrepared = charStore.currentChar.spells_prepared?.find(
@@ -233,7 +246,7 @@ onMounted(async () => {
       v-model="search"
       :data="parsedData"
       @set-active-spell="(sp) => (activeSpell = sp)"
-      @delete="deleteSpell"
+      @delete="openDeleteSpellModal"
       @prepare-spell="prepareSpell"
       @unprepare-spell="unprepareSpell"
       :active-spell="activeSpell"
@@ -245,6 +258,10 @@ onMounted(async () => {
         @pin="(data) => (fixedBox.html = data)"
         :show-pin-button="true"
         :spell="activeSpell"
+        :prepared="
+          charStore.currentChar?.spells_prepared?.find((spell) => activeSpell?.id == spell.id)
+            ?.prepared ?? 0
+        "
         @close="activeSpell = undefined"
         v-if="activeSpell !== undefined"
       />
@@ -294,6 +311,20 @@ onMounted(async () => {
       </summary>
     </details>
   </div>
+  <AppModal ref="deleteSpellModal">
+    <template v-if="spellToBeRemoved">
+      Tem certeza que quer excluir a magia
+      <strong class="font-bold underline text-lg">{{ spellToBeRemoved.title }}</strong> ?
+      <div class="flex justify-end gap-4">
+        <button @click="deleteSpellModal?.closeModal()" class="underline cursor-pointer">
+          Cancelar
+        </button>
+        <AppButton class="bg-red-500 hover:bg-red-400" @click="deleteSpell"
+          >Excluir magia</AppButton
+        >
+      </div>
+    </template>
+  </AppModal>
 </template>
 <style scoped>
 .text-shadow-purple {

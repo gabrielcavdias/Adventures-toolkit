@@ -17,13 +17,12 @@ export const useNPCStore = defineStore('npcs', () => {
   const cloneCurrentNPC = () => {
     if (!currentNPC.value) return
     // TODO: improve to actually use the latest number and not the number in here
-    const newNPC = { ...currentNPC.value } as NPC
+    const newNPC = JSON.parse(JSON.stringify(currentNPC.value)) as NPC
     const numbersInName = newNPC.name.match(/\d+$/g)
     const numbersInSlug = newNPC.slug.match(/\d+$/g)
     if (numbersInName && numbersInSlug) {
       newNPC.name = newNPC.name.replace(numbersInName[0], (+numbersInName[0] + 1).toString())
       newNPC.slug = newNPC.slug.replace(numbersInSlug[0], (+numbersInSlug[0] + 1).toString())
-      console.log(newNPC)
       npcs.value.push(newNPC)
       return
     }

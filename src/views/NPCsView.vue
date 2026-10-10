@@ -55,7 +55,6 @@ const createNPC = () => {
   newNPC.life.current = newNPC.life.total
   newNPC.mana.current = newNPC.mana.total
   npcStore.npcs.push({ ...newNPC, slug: convertToSlug(newNPC.name) })
-  newNPC.name = ''
   addNPCModal.value?.closeModal()
 
   Object.assign(newNPC, {

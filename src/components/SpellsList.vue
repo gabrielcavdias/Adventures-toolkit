@@ -111,7 +111,7 @@ const learnSpellWith = (selectedChar: Character) => {
             <template v-else>
               <button
                 :class="[
-                  'relative mr-2 text-gray-100 hover:text-purple-300 cursor-pointer',
+                  'relative mr-2 text-gray-100 hover:text-purple-300 cursor-pointer hidden lg:inline',
                   {
                     'text-purple-500!': preparedSpells?.some((item) => item.id == spell.id),
                   },

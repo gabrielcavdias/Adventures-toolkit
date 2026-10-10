@@ -329,7 +329,7 @@ async function readFileAsDataUrl(file: File) {
       <AppButton @click="createNewChar">Criar</AppButton>
     </div>
   </AppModal>
-  <AppModal ref="importCharModal">
+  <AppModal ref="importCharModal" class="pb-6">
     <label
       for="file"
       class="font-bold w-full bg-purple-600 p-4 rounded-md text-center text-xl flex justify-center items-center gap-2"
@@ -348,8 +348,5 @@ async function readFileAsDataUrl(file: File) {
     <span v-if="importCharMessage.length" class="text-red-300">
       {{ importCharMessage }}
     </span>
-    <div class="flex mt-2 justify-end">
-      <AppButton @click="createNewChar">Criar</AppButton>
-    </div>
   </AppModal>
 </template>

@@ -3,8 +3,13 @@ import { computed, ref } from 'vue'
 import type { Spell } from '../helpers/types'
 import { capitalize } from '../helpers/functions'
 
-const { spell, showPinButton = false } = defineProps<{
+const {
+  spell,
+  showPinButton = false,
+  prepared,
+} = defineProps<{
   spell: Spell | undefined
+  prepared?: number
   showPinButton?: boolean
 }>()
 const innerBody = ref<HTMLDivElement | null>(null)
@@ -21,6 +26,8 @@ const parsedLevel = computed(() => {
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'pin', html: string): void
+  (e: 'prepareSpell', spell: Spell): void
+  (e: 'unprepareSpell', spell: Spell): void
 }>()
 
 const pinHtml = () => {
@@ -43,14 +50,26 @@ const dictionary: [string, keyof Spell][] = [
     v-if="spell"
   >
     <div class="flex justify-between pt-2 pr-2">
-      <div>
+      <div class="pt-3">
         <button @click="pinHtml" class="cursor-pointer" v-if="showPinButton">
           <i class="fa-solid fa-thumbtack"></i>
         </button>
       </div>
+      <div class="pt-3 font-bold lg:hidden" v-if="prepared !== undefined">
+        <button @click="emit('prepareSpell', spell)">
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <span class="mx-4">
+          <i class="fa-solid fa-book-open"></i>
+          Preparadas: {{ prepared }}
+        </span>
+        <button @click="emit('unprepareSpell', spell)">
+          <i class="fa-solid fa-chevron-up"></i>
+        </button>
+      </div>
       <button @click="emit('close')" class="p-3">X</button>
     </div>
-    <div ref="innerBody">
+    <div :class="{ 'mt-2': showPinButton }" ref="innerBody">
       <h2 class="font-bold text-3xl">{{ spell.title }}</h2>
       <p>
         <span class="font-bold">Nível</span> {{ parsedLevel }} ({{
