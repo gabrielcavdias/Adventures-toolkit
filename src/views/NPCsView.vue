@@ -17,6 +17,8 @@ const COLORS = {
 
 const addNPCModal = ref<InstanceType<typeof AppModal> | null>(null)
 const showNPCModal = ref<InstanceType<typeof AppModal> | null>(null)
+const importNPCModal = ref<InstanceType<typeof AppModal> | null>(null)
+const file = ref('')
 
 const newNPC = reactive<NPC>({
   name: '',
@@ -92,14 +94,56 @@ const cloneNPC = (slug: string) => {
   npcStore.currentNPC = foundNPC
   npcStore.cloneCurrentNPC()
 }
+
+const exportAsJson = () => {
+  const data = JSON.stringify(npcStore.npcs, null, 2)
+  const blob = new Blob([data], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = 'npcs.json'
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+async function addNPCFile(file: File) {
+  try {
+    const npcs = await handleJsonfile(file)
+    if (!Array.isArray(npcs)) throw new Error('Invalid NPC file')
+    npcStore.npcs = npcs as NPC[]
+    importNPCModal.value?.closeModal()
+  } catch (e) {
+    console.error(e)
+    alert('Não foi possível importar os NPCs')
+  }
+}
+
+async function handleJsonfile(file: File) {
+  const text = await readFileAsText(file)
+  return JSON.parse(text)
+}
+
+async function readFileAsText(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('Error reading file'))
+    reader.readAsText(file)
+  })
+}
 </script>
 <template>
   <div class="mt-4 flex justify-between px-2">
-    <AppButton @click="console.log('TODO!!')" v-if="false">
-      Importar <i class="fa-solid fa-file-import"></i>
-    </AppButton>
+    <div class="flex gap-2">
+      <AppButton @click="importNPCModal?.openModal()">
+        Importar <i class="fa-solid fa-file-import"></i>
+      </AppButton>
+      <AppButton @click="exportAsJson">
+        Exportar <i class="fa-solid fa-file-export"></i>
+      </AppButton>
+    </div>
 
-    <AppButton @click="addNPCModal?.openModal()" class="ml-auto"> Adicionar NPC </AppButton>
+    <AppButton @click="addNPCModal?.openModal()"> Adicionar NPC </AppButton>
   </div>
   <ul class="mt-5 mx-2 grid gap-2 text-gray-100">
     <li
@@ -167,5 +211,23 @@ const cloneNPC = (slug: string) => {
       </div>
     </div>
     <AppButton class="mt-4" @click="createNPC">Criar NPC</AppButton>
+  </AppModal>
+  <AppModal ref="importNPCModal" class="pb-6">
+    <label
+      for="file"
+      class="font-bold w-full bg-purple-600 p-4 rounded-md text-center text-xl flex justify-center items-center gap-2"
+    >
+      {{ file ? `Importado` : 'Enviar arquivo' }}
+      <i class="fa-solid fa-file-import"></i>
+    </label>
+    <AppInput
+      type="file"
+      name="file"
+      id="file"
+      v-model="file"
+      class="hidden"
+      accept="application/json"
+      @change="async (e: any) => await addNPCFile(e.target.files[0])"
+    />
   </AppModal>
 </template>
